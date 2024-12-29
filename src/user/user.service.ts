@@ -20,8 +20,12 @@ export class UserService {
   }
 
   async findUserByEmail(email: string) {
+    if (!email) {
+      throw new Error('Email is required to find a user');
+    }
     return this.prisma.user.findUnique({ where: { email } });
   }
+  
 
   async validateUser(email: string, plainPassword: string) {
     const user = await this.findUserByEmail(email);

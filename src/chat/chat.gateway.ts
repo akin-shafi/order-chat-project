@@ -23,7 +23,7 @@ import {
     constructor(private readonly chatService: ChatService) {}
   
     afterInit(server: Server) {
-      this.logger.log('Init');
+      this.logger.log('Init', server);
     }
   
     handleConnection(client: Socket, ...args: any[]) {

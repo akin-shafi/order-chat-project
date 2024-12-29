@@ -4,6 +4,8 @@
 
 # Order Chat Project
 
+**Live Deployment:** [https://order-chat.onrender.com/api](https://order-chat.onrender.com/api)
+
 ## Overview
 
 The Order Chat Project is a backend application designed to handle order management and chat functionalities. It includes features such as user registration, login, order creation, and chat communication between users. Admins can manage chat rooms, close them, and send summaries to participants.
@@ -70,7 +72,6 @@ npx prisma generate
 npx prisma migrate dev --name init
 ```
 
-
 ## Start the NestJS application
 
 ```bash
@@ -126,11 +127,9 @@ socket.emit('sendMessage', { chatRoomId, senderId, content });
 ```markdown
 WebSocket events allow real-time message transfers and room management for better user engagement.
 
-
 ## Order Status
 
 When an order is created, it starts in the **Review** state. The order moves to the **Processing** state after an Admin closes the associated chat. Admins can move an order to the **Completed** state after processing is done.
-
 
 ## Support
 

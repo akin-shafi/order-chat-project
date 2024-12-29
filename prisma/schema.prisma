@@ -19,8 +19,6 @@ model User {
   resetPasswordExpiry  DateTime? 
 }
 
-
-
 model Order {
   id             Int        @id @default(autoincrement())
   description    String
@@ -30,7 +28,7 @@ model Order {
   userId         Int
   user           User        @relation(fields: [userId], references: [id])
   chatRoomId     Int?        @unique
-  chatRoom       ChatRoom?   @relation(fields: [chatRoomId], references: [id])
+  chatRoom       ChatRoom?   @relation
 }
 
 model ChatRoom {
@@ -40,6 +38,7 @@ model ChatRoom {
   messages Message[]
   status   ChatRoomStatus @default(OPEN)
 }
+
 
 
 model Message {

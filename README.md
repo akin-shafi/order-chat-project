@@ -41,7 +41,7 @@ The Order Chat Project is a backend application designed to handle order managem
 1. Open your terminal.
 2. Clone the repository from GitHub:
    ```bash
-   git clone https://github.com/your-username/order-chat-project.git
+   git clone https://github.com/akin-shafi/order-chat-project.git
    ```
 
 ## Project setup

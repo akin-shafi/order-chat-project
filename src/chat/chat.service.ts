@@ -80,6 +80,27 @@ export class ChatService {
     return this.prisma.message.delete({ where: { id: messageId } });
   }
 
+  async deleteAllMessagesInRoom(chatRoomId: number) {
+    // Check if the chat room exists
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+    });
+
+    if (!chatRoom) {
+      throw new NotFoundException('Chat room not found');
+    }
+
+    // Delete all messages from the chat room
+    await this.prisma.message.deleteMany({
+      where: {
+        chatRoomId: chatRoomId,
+      },
+    });
+
+    return { message: 'All messages have been successfully deleted.' };
+  }
+  
+
   async closeChatRoom(chatRoomId: number, concludingMessage: string, adminId: number) {
     // Fetch the chat room and update its status
     const chatRoom = await this.prisma.chatRoom.update({

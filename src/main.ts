@@ -4,10 +4,34 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { BASE_URL } from './config'; // Import BASE_URL from config
+import rateLimiter from './rateLimiter';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const allowedOrigins = [
+    'http://localhost:3000', // React
+    'http://localhost:8080', // Vue
+    'http://localhost:4200', // Angular
+    'http://localhost:5173', // Vite
+    'http://localhost:5174',
+    'http://localhost:8500',
+    'https://order-chat-client.netlify.app', // Deployed Frontend
+  ];
+
+  // Enable CORS for localhost:3000
+  app.enableCors({
+    origin: allowedOrigins, // Allow requests only from localhost:3000
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  // Apply rate limiting
+  app.use(rateLimiter);
+
+
+  // Swagger Configuration
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
     .setDescription('API description')
@@ -17,7 +41,7 @@ async function bootstrap() {
         type: 'http', 
         scheme: 'bearer', 
         bearerFormat: 'JWT',
-        description: 'Enter your JWT token in the format **Bearer &lt;token>**'
+        description: 'Enter your JWT token in the format **Bearer <token>**'
       }
     )
     .addServer(BASE_URL) // Dynamically add server URL
@@ -25,15 +49,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 3000; // Ensure your app uses the PORT env variable
+  // Start server
+  const port = process.env.PORT || 3000;
   await app.listen(port, () => {
     console.log(`Server is running on ${BASE_URL}`);
   });
 }
+
 bootstrap();
-
-
-
-
-
-

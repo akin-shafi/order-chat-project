@@ -1,20 +1,28 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-// import { Role } from '../role.enum'; // Import Role enum
+import { Role } from '../role.enum'; // Ensure this is your imported role enum
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    if (!roles) {
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!requiredRoles) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
-    return roles.includes(user.role);
+
+    const { user } = context.switchToHttp().getRequest();
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return requiredRoles.some((role) => user.role?.includes(role));
   }
 }
+
 

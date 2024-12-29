@@ -54,6 +54,25 @@ export class ChatController {
   }
 
   @ApiBearerAuth()
+  @Delete('chatRoom/:chatRoomId/messages')
+  @Roles(Role.ADMIN) // Only Admins can delete all messages in a chat room
+  @ApiOperation({ summary: 'Delete all messages in a chat room' })
+  @ApiResponse({ status: 200, description: 'All messages in the chat room have been deleted.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  async deleteAllMessagesInRoom(
+    @Req() req: CustomRequest, 
+    @Param('chatRoomId') chatRoomId: string // chatRoomId as string
+  ) {
+    const parsedChatRoomId = Number(chatRoomId); // Convert chatRoomId to number
+    if (isNaN(parsedChatRoomId)) {
+      throw new Error('chatRoomId must be a valid number');
+    }
+    
+    return this.chatService.deleteAllMessagesInRoom(parsedChatRoomId); // Pass the parsed chatRoomId
+  }
+
+
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':chatRoomId/close')
   @Roles(Role.ADMIN) // Ensure only admins can close chat rooms

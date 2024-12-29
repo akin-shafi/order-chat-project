@@ -3,43 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebSocket Test</title>
+  <title>Chat App with Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #loginForm, #chatApp {
+      display: none;
+    }
+    #messages {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    .message {
+      padding: 5px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .message .content {
+      flex-grow: 1;
+    }
+    .message .actions {
+      display: flex;
+      gap: 5px;
+    }
+    .sent {
+      text-align: right;
+      color: blue;
+    }
+    .received {
+      text-align: left;
+      color: green;
+    }
+    #controls {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>WebSocket Test</h1>
-  <div>
-    <input type="text" id="messageInput" placeholder="Enter message">
-    <button onclick="sendMessage()">Send</button>
+  <h1>Chat App</h1>
+  <div id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="login()">Login</button>
   </div>
-  <div id="messages"></div>
+
+  <div id="chatApp">
+    <h2>Chat Room</h2>
+    <div id="messages"></div>
+    <div id="controls">
+      <input type="text" id="messageInput" placeholder="Enter message">
+      <button onclick="sendMessage()">Send</button>
+      <button onclick="closeChatRoom()">Close Chat Room</button>
+    </div>
+  </div>
 
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
   <script>
-    const socket = io('https://order-chat.onrender.com');
+    const apiUrl = 'http://localhost:8300';
+    let token = '';
+    const chatRoomId = 1; // Replace with dynamic chatRoomId if needed
+    const userId = 1; // Replace with dynamic user ID from your authentication
+    let isAdmin = true; // Assume admin status for demo purposes
 
-    socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-      socket.emit('joinRoom', '3');
-    });
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-    socket.on('newMessage', (message) => {
+      fetch(`${apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.access_token) {
+            token = data.access_token;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('chatApp').style.display = 'block';
+            initializeChat();
+          } else {
+            alert('Login failed. Please check your credentials.');
+          }
+        })
+        .catch((error) => console.error('Error logging in:', error));
+    }
+
+    function initializeChat() {
+      const socket = io(`${apiUrl}`, { query: { token } });
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+        socket.emit('joinRoom', chatRoomId);
+        loadMessages();
+      });
+
+      socket.on('newMessage', (message) => {
+        addMessage(message, 'received');
+      });
+    }
+
+    function addMessage(message, type) {
       const messagesDiv = document.getElementById('messages');
-      const newMessage = document.createElement('div');
-      newMessage.textContent = message.content;
-      messagesDiv.appendChild(newMessage);
-    });
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      messageDiv.innerHTML = `
+        <span class="content">${message.content}</span>
+        <span class="actions">
+          ${message.senderId === userId ? `<button onclick="editMessage(${message.id}, '${message.content}')">Edit</button>` : ''}
+          ${message.senderId === userId ? `<button onclick="deleteMessage(${message.id})">Delete</button>` : ''}
+        </span>
+      `;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function loadMessages() {
+      fetch(`${apiUrl}/chat/${chatRoomId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((response) => response.json())
+        .then((messages) => {
+          const messagesDiv = document.getElementById('messages');
+          messagesDiv.innerHTML = '';
+          messages.forEach((message) => addMessage(message, message.senderId === userId ? 'sent' : 'received'));
+        });
+    }
 
     function sendMessage() {
       const input = document.getElementById('messageInput');
-      const message = input.value;
-      const senderId = 1; // Replace with appropriate user id
-      socket.emit('sendMessage', { chatRoomId: 1, senderId: senderId, content: message });
-      input.value = '';
+      const content = input.value.trim();
+      if (!content) return;
+
+      const message = { content, chatRoomId, senderId: userId };
+      fetch(`${apiUrl}/chat/${chatRoomId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(message),
+      })
+        .then((response) => response.json())
+        .then((sentMessage) => {
+          addMessage(sentMessage, 'sent');
+          input.value = '';
+        });
     }
 
-    socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
+    function closeChatRoom() {
+      if (!isAdmin) {
+        alert('Only admins can close the chat room.');
+        return;
+      }
+
+      const concludingMessage = prompt('Enter a concluding message:');
+      if (!concludingMessage) return;
+
+      fetch(`${apiUrl}/chat/${chatRoomId}/close`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ concludingMessage }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          alert('Chat room closed successfully.');
+        });
+    }
   </script>
 </body>
 </html>

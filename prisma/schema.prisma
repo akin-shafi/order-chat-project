@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                   Int      @id @default(autoincrement())
+  email                String   @unique
+  password             String
+  role                 Role
+  orders               Order[]
+  messages             Message[]
+  
+  resetPasswordToken   String?   
+  resetPasswordExpiry  DateTime? 
+}
+
+
+
+model Order {
+  id             Int        @id @default(autoincrement())
+  description    String
+  specifications String
+  quantity       Int
+  status         OrderStatus @default(REVIEW)
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
+  chatRoomId     Int?        @unique
+  chatRoom       ChatRoom?   @relation(fields: [chatRoomId], references: [id])
+}
+
+model ChatRoom {
+  id       Int       @id @default(autoincrement())
+  order    Order     @relation(fields: [orderId], references: [id])
+  orderId  Int       @unique
+  messages Message[]
+  status   ChatRoomStatus @default(OPEN)
+}
+
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  sentAt    DateTime @default(now())
+  chatRoom  ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoomId Int
+  
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  Int
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  REVIEW
+  PROCESSING
+  COMPLETED
+}
+
+enum ChatRoomStatus {
+  OPEN
+  CLOSED
+}

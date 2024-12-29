@@ -19,7 +19,7 @@
 
     socket.on('connect', () => {
       console.log('Connected to WebSocket server');
-      socket.emit('joinRoom', '1');
+      socket.emit('joinRoom', '3');
     });
 
     socket.on('newMessage', (message) => {

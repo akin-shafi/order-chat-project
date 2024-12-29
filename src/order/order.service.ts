@@ -32,6 +32,16 @@ export class OrderService {
     return updatedOrder;
   }
 
+  async completeOrder(orderId: number, adminId: number) {
+    const order = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'COMPLETED' },
+    });
+
+    console.log(`order closed by admin with id ${adminId}`)
+    return order;
+  }
+
   async getOrders(userId: number, isAdmin: boolean) {
     if (isAdmin) {
       return this.prisma.order.findMany();

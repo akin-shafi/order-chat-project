@@ -55,9 +55,7 @@ export class ChatService {
     }
   
     return this.prisma.message.findMany({ where: { chatRoomId: chatRoomId } });
-  }
-  
-  
+  }  
 
   async updateMessage(messageId: number, senderId: number, updateMessageDto: UpdateMessageDto) {
     // Check if the message exists and belongs to the sender
@@ -88,6 +86,21 @@ export class ChatService {
       where: { id: chatRoomId },
       data: { status: 'CLOSED' },
     });
+
+    // Find related order
+    const order = await this.prisma.order.findUnique({ where: { chatRoomId: chatRoomId } });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Update order status to PROCESSING after chat room is closed
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { status: 'PROCESSING' },
+    });
+    
+    
   
     // Fetch related messages
     const messages = await this.prisma.message.findMany({ where: { chatRoomId: chatRoomId } });

@@ -1,13 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { Role } from '@prisma/client';    
 import { Request as Req } from '@nestjs/common'; // Renaming the decorator import
 import { CustomRequest } from '../types/custom-request.interface'; // Import CustomRequest
+import { Roles } from '../auth/roles.decorator'; // Import Roles decorator
+import { Role } from '../role.enum'; // Import Role enum
 
 
 @ApiTags('orders')
@@ -21,14 +22,10 @@ export class OrderController {
   @ApiOperation({ summary: 'Create a new order' })
   @ApiResponse({ status: 201, description: 'The order has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Validation failed.' })
-
-  
   async createOrder(@Req() req: CustomRequest, @Body() createOrderDto: CreateOrderDto) {
-    console.log("req.user", req.user)
     const userId = req.user.userId;
     return this.orderService.createOrder(createOrderDto, userId);
   }
-
 
   @ApiBearerAuth()
   @Get()
@@ -47,6 +44,20 @@ export class OrderController {
   @ApiResponse({ status: 200, description: 'The order has been successfully updated.' })
   async updateOrder(@Param('id') id: number, @Body() updateOrderDto: UpdateOrderDto) {
     return this.orderService.updateOrder(Number(id), updateOrderDto);
+  }
+
+  @ApiBearerAuth()
+  // @UseGuards(RolesGuard)
+  @Patch(':orderId/complete')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Mark an order as completed' })
+  @ApiResponse({ status: 200, description: 'The order has been successfully marked as completed.' })
+  async completeOrder(
+    @Param('orderId') orderId: number, 
+    @Req() req: CustomRequest
+  ) {
+    const adminId = req.user.userId;
+    return this.orderService.completeOrder(Number(orderId), adminId);
   }
 }
 

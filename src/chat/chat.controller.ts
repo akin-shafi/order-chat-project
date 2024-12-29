@@ -6,7 +6,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard'; // Import RolesGuard
 import { Roles } from '../auth/roles.decorator'; // Import Roles decorator
-import { Role } from '@prisma/client';
+import { Role } from '../role.enum'; // Import Role enum
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CloseChatRoomDto } from './dto/close-chat-room.dto'; // Import DTO
 import { CustomRequest } from '../types/custom-request.interface'; // Import CustomRequest
@@ -67,6 +67,8 @@ export class ChatController {
     const adminId = req.user.userId; // Get admin ID from the request
     return this.chatService.closeChatRoom(Number(chatRoomId), closeChatRoomDto.concludingMessage, adminId);
   }
+
+  
 }
 
 

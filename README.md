@@ -61,7 +61,17 @@ $ npm install
   NODE_ENV=development
 ```
 
-## Compile and run the project
+## Run Migrations
+
+Generate Prisma client and run migrations to set up the database schema:
+
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+
+## Start the NestJS application
 
 ```bash
 # development
@@ -87,6 +97,41 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## WebSocket Integration
+
+This project uses WebSocket for real-time chat functionalities. Here's how to set up and use WebSockets:
+
+### Start Socket.IO Server
+
+The Socket.IO server is already integrated into the NestJS application. When you start the application, the WebSocket server will automatically initialize.
+
+### Connect to WebSocket Server
+
+Use the following address to connect your client to the WebSocket server:
+
+```bash
+const socket = io('http://localhost:8300');
+
+```
+
+## WebSocket Events
+
+# sendMessage: Send a message to a chat room.
+
+```bash
+socket.emit('sendMessage', { chatRoomId, senderId, content });
+
+```
+
+```markdown
+WebSocket events allow real-time message transfers and room management for better user engagement.
+
+
+## Order Status
+
+When an order is created, it starts in the **Review** state. The order moves to the **Processing** state after an Admin closes the associated chat. Admins can move an order to the **Completed** state after processing is done.
+
+
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
@@ -100,3 +145,4 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```

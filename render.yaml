@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: order-chat-backend
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        value: your_database_url_here
+      - key: JWT_SECRET
+        value: your_jwt_secret_here
+      - key: NODE_ENV
+        value: production

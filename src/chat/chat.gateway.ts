@@ -23,12 +23,14 @@ import {
     constructor(private readonly chatService: ChatService) {}
   
     afterInit(server: Server) {
-      this.logger.log('Init', server);
+      this.logger.log('Initialized', server);
     }
   
     handleConnection(client: Socket, ...args: any[]) {
       this.logger.log(`Client connected: ${client.id}`);
     }
+
+
   
     handleDisconnect(client: Socket) {
       this.logger.log(`Client disconnected: ${client.id}`);

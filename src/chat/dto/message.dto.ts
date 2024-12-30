@@ -6,12 +6,12 @@ export class MessageDto {
   @ApiProperty({ example: 1 })
   @IsNumber()
   @IsNotEmpty()
-  chatRoomId: number;
+  chatRoomId: any;
 
   @ApiProperty({ example: 1 })
   @IsNumber()
   @IsNotEmpty()
-  senderId: number;
+  senderId: any;
 
   @ApiProperty({ example: 'Hello, this is a new message!' })
   @IsString()

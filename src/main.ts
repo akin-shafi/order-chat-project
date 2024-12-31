@@ -17,7 +17,8 @@ async function bootstrap() {
     'http://localhost:5173', // Vite
     'http://localhost:5174',
     'http://localhost:8500',
-    'https://order-chat-client.netlify.app', // Deployed Frontend
+    'https://order-chat.onrender.com', // Backend 
+    'https://order-chat.netlify.app', // Deployed Frontend
   ];
 
   // Enable CORS for localhost:3000

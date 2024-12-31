@@ -6,6 +6,8 @@
 
 **Live Deployment:** [https://order-chat.onrender.com/api](https://order-chat.onrender.com/api)
 
+**FrontEnd Testing:** [https://order-chat.netlify.app](https://order-chat.netlify.app)
+
 ## Overview
 
 The Order Chat Project is a backend application designed to handle order management and chat functionalities. It includes features such as user registration, login, order creation, and chat communication between users. Admins can manage chat rooms, close them, and send summaries to participants.
@@ -89,7 +91,7 @@ $ npm run start:prod
 
 ```bash
 # unit tests
-$ npm run test
+$ npm test
 
 # e2e tests
 $ npm run test:e2e

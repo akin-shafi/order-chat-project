@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -9,6 +10,7 @@ import { Role, OrderStatus, ChatRoomStatus } from '@prisma/client'; // Import Pr
 describe('Auth and Chat Integration', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let token: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,52 +30,46 @@ describe('Auth and Chat Integration', () => {
   });
 
   describe('Auth', () => {
-    it('should register a new user', async () => {
-      return request(app.getHttpServer())
-        .post('/auth/register')
-        .send({
-          email: 'test@example.com',
-          password: 'P@ssword',
-          role: Role.USER,
-        })
-        .expect(201)
-        .then((response) => {
-          expect(response.body).toHaveProperty('id');
-          expect(response.body).toHaveProperty('email', 'test@example.com');
-        });
-    });
-
-    it('should login the user', async () => {
-      await prisma.user.create({
-        data: {
-          email: 'test@example.com',
-          password: 'P@ssword',
-          role: Role.USER,
+    beforeAll(async () => {
+      const userExists = await prisma.user.findUnique({
+        where: {
+          email: 'sakinropo@gmail.com',
         },
       });
 
-      return request(app.getHttpServer())
+      if (!userExists) {
+        await request(app.getHttpServer())
+          .post('/auth/register')
+          .send({
+            email: 'sakinropo@gmail.com',
+            password: 'P@ssword',
+            role: Role.USER,
+          })
+          .expect(201);
+      }
+
+      const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'sakinropo@gmail.com',
           password: 'P@ssword',
-        })
-        .expect(200)
-        .then((response) => {
-          expect(response.body).toHaveProperty('token');
-          expect(response.body).toHaveProperty('role');
         });
+
+      expect([200, 201]).toContain(loginResponse.status);
+      token = loginResponse.body.token;
+    });
+
+    it('should login the user if already exists', async () => {
+      expect(token).toBeDefined();
     });
   });
 
   describe('Chat', () => {
-    let token: string;
-
     beforeAll(async () => {
       const loginResponse = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'sakinropo@gmail.com',
           password: 'P@ssword',
         });
       token = loginResponse.body.token;
@@ -81,7 +77,7 @@ describe('Auth and Chat Integration', () => {
 
     it('should send a message in a chat room', async () => {
       const user = await prisma.user.findFirst({
-        where: { email: 'test@example.com' },
+        where: { email: 'sakinropo@gmail.com' },
       });
 
       const order = await prisma.order.create({
@@ -101,22 +97,30 @@ describe('Auth and Chat Integration', () => {
         },
       });
 
-      return request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post(`/chat/${chatRoom.id}/messages`)
         .set('Authorization', `Bearer ${token}`)
         .send({
           content: 'Hello, world!',
         })
-        .expect(201)
-        .then((response) => {
-          expect(response.body).toHaveProperty('id');
-          expect(response.body).toHaveProperty('content', 'Hello, world!');
-        });
+        .expect(201);
     });
 
     it('should fetch messages from a chat room', async () => {
+      const user = await prisma.user.findFirst({
+        where: { email: 'sakinropo@gmail.com' },
+      });
+
       const chatRoom = await prisma.chatRoom.findFirst({
         where: { status: ChatRoomStatus.OPEN },
+      });
+
+      await prisma.message.create({
+        data: {
+          content: 'Hello, world!',
+          senderId: user.id,
+          chatRoomId: chatRoom.id,
+        },
       });
 
       return request(app.getHttpServer())

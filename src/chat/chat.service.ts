@@ -31,12 +31,13 @@ export class ChatService {
     });
   }
 
+
   async getMessages(chatRoomId: number, userId: number) {
     const chatRoom = await this.prisma.chatRoom.findUnique({ where: { id: chatRoomId } });
     if (!chatRoom) {
       throw new NotFoundException('Chat room not found');
     }
-  
+
     const isParticipant = await this.prisma.user.findFirst({
       where: {
         id: userId,
@@ -50,12 +51,13 @@ export class ChatService {
         ],
       },
     });
+
     if (!isParticipant) {
-      throw new ForbiddenException('You do not have access to this chat room');
+      throw new ForbiddenException('User role is unauthorized to fetch all messages.');
     }
-  
+
     return this.prisma.message.findMany({ where: { chatRoomId: chatRoomId } });
-  }  
+  }
 
   async updateMessage(messageId: number, senderId: number, updateMessageDto: UpdateMessageDto) {
     // Check if the message exists and belongs to the sender
